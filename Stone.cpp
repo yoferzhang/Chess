@@ -1,3 +1,5 @@
+// Stone.cpp
+
 #include "Stone.h"
 
 Stone::Stone()
@@ -14,10 +16,36 @@ void Stone::init(int id)
     {0, 0, Stone::CHE},
     {0, 1, Stone::MA},
     {0, 2, Stone::XIANG},
+    {0, 3, Stone::SHI},
+    {0, 4, Stone::JIANG},
+    {0, 5, Stone::SHI},
+    {0, 6, Stone::XIANG},
+    {0, 7, Stone::MA},
+    {0, 8, Stone::CHE},
+
+    {2, 1, Stone::PAO},
+    {2, 7, Stone::PAO},
+    {3, 0, Stone::BING},
+    {3, 2, Stone::BING},
+    {3, 4, Stone::BING},
+    {3, 6, Stone::BING},
+    {3, 8, Stone::BING},
     };
+
     _id = id;
     _dead = false;
     _red = id < 16;
+
+    if (_red) { // 上方的棋子
+        _row = pos[id].row;
+        _col = pos[id].col;
+        _type = pos[id].type;
+    }
+    else { // 下方的棋子
+        _row = 9 - pos[id - 16].row;
+        _col = 8 - pos[id - 16].col;
+        _type = pos[id - 16].type;
+    }
 }
 
 QString Stone::getText()

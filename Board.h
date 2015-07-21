@@ -1,4 +1,5 @@
 // Board.h
+// Board类实现了棋盘的绘制以及显示
 //
 
 #ifndef BOARD_H
@@ -23,6 +24,8 @@ public:
     void drawStone(QPainter &painter, int id); // 绘制棋子
 
     virtual void paintEvent(QPaintEvent *);
+
+    void DrawBackground(); // 设置背景颜色
 
 signals:
 
