@@ -16,16 +16,21 @@ public:
 
     Stone _s[32]; // 定义32个棋子
     int _r; // 棋子的半径
+    int _selectid;
 
     // 返回棋盘行列对应的像素坐标
     QPoint center(int row, int col);
     QPoint center(int id);
 
+    bool getRowCol(QPoint pt, int &row, int &col);
+
     void drawStone(QPainter &painter, int id); // 绘制棋子
+
+    void DrawBackground(); // 设置背景颜色
 
     virtual void paintEvent(QPaintEvent *);
 
-    void DrawBackground(); // 设置背景颜色
+    virtual void mouseReleaseEvent(QMouseEvent *ev); // 鼠标点击象棋并释放鼠标时候触发
 
 signals:
 
