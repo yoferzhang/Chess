@@ -36,7 +36,7 @@ void Stone::init(int id)
     _dead = false;
     _red = id < 16;
 
-    if (_red) { // 上方的棋子
+    if (id < 16) { // 上方的棋子
         _row = pos[id].row;
         _col = pos[id].col;
         _type = pos[id].type;

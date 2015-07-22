@@ -12,12 +12,14 @@ public:
     Stone();
 
     enum TYPE{JIANG, CHE, PAO, MA, BING, SHI, XIANG};
-    int _row; // 棋子所处的行
-    int _col; // 棋子所处的列
-    int _id; // 棋子的id
+    int _row;
+    int _col;
+    TYPE _type;
+
+
+    int _id;
     bool _dead;
     bool _red;
-    TYPE _type;
 
     // 棋子的初始化
     void init(int id);

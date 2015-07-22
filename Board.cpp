@@ -3,13 +3,24 @@
 #include "Board.h"
 #include <QPainter> // 绘制棋盘需要
 #include <QMouseEvent>
+#define GetRowCol(__row, __col, __id) \
+    int __row = _s[__id]._row;\
+    int __col = _s[__id]._col
 
-Board::Board(QWidget *parent) : QWidget(parent)
+Board::Board(QWidget *parent) : QFrame(parent)
+{
+    init(true);
+}
+
+void Board::init(bool bRedSide)
 {
     for (int i = 0; i < 32; ++i) {
         _s[i].init(i);
     }
     _selectid = -1;
+    _bRedTurn = true;
+    _bSide = bRedSide;
+    update();
 }
 
 // 绘制棋盘
@@ -74,7 +85,7 @@ QPoint Board::center(int id)
 
 void Board::drawStone(QPainter &painter, int id)
 {
-    if (_s[id]._dead) {
+    if (isDead(id)) {
         return;
     }
 
@@ -176,17 +187,208 @@ void Board::mouseReleaseEvent(QMouseEvent *ev)
 
     if (_selectid == -1) { // 如果点中的棋子之前未被选中
         if (clickid != -1) {
-            _selectid = clickid;
-            update();
+            if (_bRedTurn == _s[clickid]._red) {
+                _selectid = clickid;
+                update();
+            }
         }
     }
     else {
-        _s[_selectid]._row = row;
-        _s[_selectid]._col = col;
-        if (clickid != -1) {
-            _s[clickid]._dead = true;
+        if (canMove(_selectid, clickid, row, col)) {
+            // 走棋
+            _s[_selectid]._row = row;
+            _s[_selectid]._col = col;
+            if (clickid != -1) {
+                _s[clickid]._dead = true;
+            }
+            _selectid = -1;
+            _bRedTurn = !_bRedTurn;
+            update();
         }
-        _selectid = -1;
-        update();
     }
+}
+
+bool Board::canMove(int moveid, int killid, int row, int col)
+{
+    // 如果moveid和killid颜色相同，则不能移动，还需要换选择
+    if (_s[moveid]._red == _s[killid]._red) {
+        _selectid = killid;
+        update();
+        return false;
+    }
+
+
+    switch (_s[moveid]._type) {
+    case Stone::JIANG:
+        return canMoveJiang(moveid, killid, row, col);
+
+    case Stone::SHI:
+        return canMoveShi(moveid, killid, row, col);
+
+    case Stone::XIANG:
+        return canMoveXiang(moveid, killid, row, col);
+
+    case Stone::CHE:
+        return canMoveChe(moveid, killid, row, col);
+
+    case Stone::MA:
+        return canMoveMa(moveid, killid, row, col);
+
+    case Stone::PAO:
+        return canMovePao(moveid, killid, row, col);
+
+    case Stone::BING:
+        return canMoveBing(moveid, killid, row, col);
+    }
+
+    return true;
+
+}
+
+
+bool Board::canMoveJiang(int moveid, int killid, int row, int col)
+{
+    // 可直接吃对方将
+    if (killid != -1 && _s[killid]._type == Stone::JIANG)
+    {
+        return canMoveChe(moveid, killid, row, col);
+    }
+
+    GetRowCol(row1, col1, moveid);
+    int r = relation(row1, col1, row, col);
+    if (r != 1 || r != 10) {
+        return false;
+    }
+
+    // 目标位置在九宫格内
+    if (_s[moveid]._red) {
+        if (row > 2) {
+            return false;
+        }
+    }
+    else {
+        if (row < 7) {
+            return false;
+        }
+    }
+
+    if (col < 3 || col > 5) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Board::canMoveShi(int moveid, int, int row, int col)
+{
+
+    // 移动步长一个格子对角线
+    GetRowCol(row1, col1, moveid);
+    int r = relation(row1, col1, row, col);
+    if (r != 11) {
+        return false;
+    }
+
+    // 目标位置在九宫格内
+    if (_s[moveid]._red) {
+        if (row > 2) {
+            return false;
+        }
+    }
+    else {
+        if (row < 7) {
+            return false;
+        }
+    }
+
+    if (col < 3 || col > 5) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Board::canMoveXiang(int moveid, int, int row, int col)
+{
+    GetRowCol(row1, col1, moveid);
+    int r = relation(row1, col1, row, col);
+    if (r != 22) { // 象走田，所以r应该等于22
+        return false;
+    }
+
+    // 看象眼有没有棋子
+    int rEye = (row + row1) / 2;
+    int cEye = (col + col1) / 2;
+    if (getStoneId(rEye, cEye) != -1) {
+        return false;
+    }
+
+    // 判断是否在棋盘的下方
+    if (isBottomSide(moveid)) {
+        if (row < 4) {
+            return false;
+        }
+    }
+    else {
+        if (row > 5) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Board::canMoveChe(int moveid, int, int row, int col)
+{
+    GetRowCol(row1, col1, moveid);
+    int ret = getStoneCountAtLine(row1, col1, row, col);
+    if (ret == 0) {
+        return true;
+    }
+
+    return false;
+}
+
+bool Board::canMoveMa(int moveid, int killid, int row, int col)
+{
+    return true;
+}
+
+bool Board::canMovePao(int moveid, int killid, int row, int col)
+{
+    return true;
+}
+
+bool Board::canMoveBing(int moveid, int killid, int row, int col)
+{
+    return true;
+}
+
+int Board::relation(int row1, int col1, int row, int col)
+{
+    return qAbs(row1 - row) * 10 + qAbs(col1 - col);
+}
+
+int Board::getStoneId(int row, int col)
+{
+    for (int i = 0; i < 32; ++i) {
+        if (_s[i]._row == row &&
+            _s[i]._col == col && !isDead(i)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool Board::isDead(int id)
+{
+    if (id == -1) {
+        return true;
+    }
+    return _s[id]._dead;
+}
+
+bool Board::isBottomSide(int id)
+{
+    return _bSide == _s[id]._red;
 }
