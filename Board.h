@@ -52,6 +52,9 @@ public:
 
     bool isBottomSide(int id); // 判断id棋子是否在棋盘下方
 
+    // 判断两个点是否在同一条直线上，炮和车走棋的时候需要用到
+    int getStoneCountAtLine(int row1, int col1, int row2, int col2);
+
 
 signals:
 

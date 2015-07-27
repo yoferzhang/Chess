@@ -30,8 +30,9 @@ void Board::paintEvent(QPaintEvent *)
 
     QPainter painter(this);
 
-    int d = 40; // d表示棋盘格子的直径，也就是棋子的直径
-    _r = d / 2;
+    int r = height() / 20;
+    _r = r;
+    int d = r * 2;
 
     // 绘制10条横线
     for (int i = 1; i <= 10; ++i) {
@@ -342,25 +343,79 @@ bool Board::canMoveChe(int moveid, int, int row, int col)
 {
     GetRowCol(row1, col1, moveid);
     int ret = getStoneCountAtLine(row1, col1, row, col);
-    if (ret == 0) {
+    if (ret == 0) { // 在一行，并且中间没有棋子
         return true;
     }
 
     return false;
 }
 
-bool Board::canMoveMa(int moveid, int killid, int row, int col)
+bool Board::canMoveMa(int moveid, int, int row, int col)
 {
+    GetRowCol(row1, col1, moveid);
+    int r = relation(row1, col1, row, col);
+    // 首先判断马要走马字
+    if (r != 12 && r != 21) {
+        return false;
+    }
+
+    // 判断有没有蹩马腿的情况
+    if (r == 12) { // 列相差等于2
+        if (getStoneId(row1, (col + col1) / 2) != -1) {
+            return false;
+        }
+    }
+    else { // 行相差等于2
+        if (getStoneId((row + row1) / 2, col1) != -1) {
+            return false;
+        }
+    }
     return true;
 }
 
 bool Board::canMovePao(int moveid, int killid, int row, int col)
 {
-    return true;
+    GetRowCol(row1, col1, moveid);
+    int ret = getStoneCountAtLine(row, col, row1, col1);
+    if (killid != -1) { // 如果炮要吃对方的棋子
+        if (ret == 1) { // 中间有一个棋子，可以走
+            return true;
+        }
+    }
+    else { // 如果炮不吃棋子
+        if (ret == 0) { // 中间没有棋子，可以走
+            return true;
+        }
+    }
+
+    return false;
 }
 
-bool Board::canMoveBing(int moveid, int killid, int row, int col)
+bool Board::canMoveBing(int moveid, int, int row, int col)
 {
+    GetRowCol(row1, col1, moveid);
+    int r = relation(row1, col1, row, col);
+    // 首先判断兵只能走一步
+    if (r != 1 && r != 10) {
+        return false;
+    }
+
+    if (isBottomSide(moveid)) { // 下面一方的棋子
+        if (row > row1) { // 如果目标行大于原始行，相当于并在后退
+            return false;
+        }
+        if (row1 >= 5 && row == row1) { // 还没有过河就想横着走
+            return false;
+        }
+    }
+    else { // 上面一方的棋子
+        if (row1 > row) { // 如果目标行小于原始行，相当于兵在后退
+            return false;
+        }
+        if (row <= 4 && row == row1) { // 还没有过河就想横着走
+            return false;
+        }
+    }
     return true;
 }
 
@@ -377,7 +432,7 @@ int Board::getStoneId(int row, int col)
             return i;
         }
     }
-    return -1;
+    return -1; // 如果不是棋子返回-1
 }
 
 bool Board::isDead(int id)
@@ -391,4 +446,39 @@ bool Board::isDead(int id)
 bool Board::isBottomSide(int id)
 {
     return _bSide == _s[id]._red;
+}
+
+int Board::getStoneCountAtLine(int row1, int col1, int row2, int col2)
+{
+    int ret = 0;
+
+    // 首先判断两个棋子是否在同一条直线上，如果不在同一条直线上，直接返回-1
+    if (row1 != row2 && col1 != col2) {
+        return -1;
+    }
+    if (row1 == row2 && col1 == col2) {
+        return -1;
+    }
+
+    // 计算两个棋子之间的有多少个棋子
+    if (row1 == row2) { // 在同一行
+        int min = col1 < col2 ? col1 : col2;
+        int max = col1 > col2 ? col1 : col2;
+        for (int col = min + 1; col < max; ++col) {
+            if (getStoneId(row1, col) != -1) {
+                ++ret;
+            }
+        }
+    }
+    else { // 在同一列
+        int min = row1 < row2 ? row1 : row2;
+        int max = row1 > row2 ? row1 : row2;
+        for (int row = min + 1; row < max; ++row) {
+            if (getStoneId(row, col1) != -1) {
+                ++ret;
+            }
+        }
+    }
+
+    return ret;
 }
