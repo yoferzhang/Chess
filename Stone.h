@@ -10,6 +10,7 @@ class Stone
 {
 public:
     Stone();
+    ~Stone();
 
     enum TYPE{JIANG, CHE, PAO, MA, BING, SHI, XIANG};
     int _row;
@@ -25,7 +26,9 @@ public:
     void init(int id);
 
     // 判断_type返回相应字符串
-    QString getText();
+    QString name();
+
+    void rotate(); // 翻转棋盘
 
 };
 

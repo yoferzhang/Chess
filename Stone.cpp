@@ -1,8 +1,14 @@
 // Stone.cpp
 
 #include "Stone.h"
+#include <QDebug>
 
 Stone::Stone()
+{
+
+}
+
+Stone::~Stone()
 {
 
 }
@@ -32,23 +38,23 @@ void Stone::init(int id)
     {3, 8, Stone::BING},
     };
 
-    _id = id;
+    //_id = id;
     _dead = false;
     _red = id < 16;
 
     if (id < 16) { // 上方的棋子
-        _row = pos[id].row;
-        _col = pos[id].col;
-        _type = pos[id].type;
+        this->_row = pos[id].row;
+        this->_col = pos[id].col;
+        this->_type = pos[id].type;
     }
     else { // 下方的棋子
-        _row = 9 - pos[id - 16].row;
-        _col = 8 - pos[id - 16].col;
-        _type = pos[id - 16].type;
+        this->_row = 9 - pos[id - 16].row;
+        this->_col = 8 - pos[id - 16].col;
+        this->_type = pos[id - 16].type;
     }
 }
 
-QString Stone::getText()
+QString Stone::name()
 {
     switch (this->_type)
     {
@@ -68,4 +74,10 @@ QString Stone::getText()
         return "相";
     }
     return "错误";
+}
+
+void Stone::rotate()
+{
+    this->_col = 8 - this->_col;
+    this->_row = 9 - this->_row;
 }
